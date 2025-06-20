@@ -37,6 +37,9 @@ export function isTokenExpired(expiresAt: number): boolean {
  */
 export async function refreshOAuthToken(refreshToken: string): Promise<RefreshTokenResponse> {
     try {
+        console.log("🔄 Attempting to refresh OAuth token...");
+        console.log(`Using refresh token: ${refreshToken.substring(0, 10)}...`); // Log first 10 chars for debugging
+
         const response = await fetch(CLAUDE_OAUTH_REFRESH_URL, {
             method: "POST",
             headers: {
@@ -50,14 +53,19 @@ export async function refreshOAuthToken(refreshToken: string): Promise<RefreshTo
 
         if (!response.ok) {
             const errorText = await response.text();
+            console.error(`❌ Token refresh failed with status: ${response.status}`);
+            console.error(`❌ Response: ${errorText}`);
             throw new Error(
                 `Failed to refresh OAuth token: ${response.status} ${response.statusText} - ${errorText}`
             );
         }
 
         const data = await response.json() as RefreshTokenResponse;
+        console.log("✅ Token refresh successful");
+        console.log(`✅ New token expires in: ${data.expires_in} seconds`);
         return data;
     } catch (error) {
+        console.error(`❌ OAuth token refresh failed: ${error}`);
         throw new Error(`OAuth token refresh failed: ${error}`);
     }
 }
@@ -115,14 +123,20 @@ export async function getValidOAuthTokens(
  */
 export async function setupOAuthWithRefresh(): Promise<OAuthTokens | null> {
     const useOAuth = core.getInput("use_oauth");
+    console.log(`🔍 OAuth setup - use_oauth: ${useOAuth}`);
 
     if (useOAuth !== "true") {
+        console.log("📝 OAuth not enabled, skipping setup");
         return null;
     }
 
     const accessToken = core.getInput("claude_access_token");
     const refreshToken = core.getInput("claude_refresh_token");
     const expiresAtStr = core.getInput("claude_expires_at");
+
+    console.log(`🔍 OAuth inputs - access_token: ${accessToken ? accessToken.substring(0, 10) + '...' : 'NOT_SET'}`);
+    console.log(`🔍 OAuth inputs - refresh_token: ${refreshToken ? refreshToken.substring(0, 10) + '...' : 'NOT_SET'}`);
+    console.log(`🔍 OAuth inputs - expires_at: ${expiresAtStr || 'NOT_SET'}`);
 
     if (!accessToken || !refreshToken || !expiresAtStr) {
         throw new Error(
@@ -134,6 +148,10 @@ export async function setupOAuthWithRefresh(): Promise<OAuthTokens | null> {
     if (isNaN(expiresAt)) {
         throw new Error("claude_expires_at must be a valid timestamp");
     }
+
+    console.log(`🔍 Token expiration: ${new Date(expiresAt).toISOString()}`);
+    console.log(`🔍 Current time: ${new Date().toISOString()}`);
+    console.log(`🔍 Token expired: ${isTokenExpired(expiresAt)}`);
 
     return await getValidOAuthTokens(accessToken, refreshToken, expiresAt);
 } 

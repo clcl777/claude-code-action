@@ -1,0 +1,174 @@
+name: Debug OAuth Authentication
+
+on:
+  workflow_dispatch:  # 手動実行
+    inputs:
+      test_comment:
+        description: 'Test comment content'
+        required: false
+        default: '@claude debug test'
+  issue_comment:
+    types: [created]
+
+jobs:
+  debug-oauth:
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude-debug'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Debug Environment
+        run: |
+          echo "🔍 Debug Information"
+          echo "==================="
+          echo "GitHub Event: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo ""
+
+      - name: Debug OAuth Tokens (Safe)
+        run: |
+          echo "📋 OAuth Token Status"
+          echo "===================="
+          echo "ACCESS_TOKEN length: ${#CLAUDE_ACCESS_TOKEN}"
+          echo "REFRESH_TOKEN length: ${#CLAUDE_REFRESH_TOKEN}"
+          echo "EXPIRES_AT: $CLAUDE_EXPIRES_AT"
+          echo "Current timestamp: $(date +%s)000"
+          echo "Current time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo ""
+          
+          if [ -n "$CLAUDE_EXPIRES_AT" ]; then
+            expires_seconds=$((CLAUDE_EXPIRES_AT / 1000))
+            echo "Token expires: $(date -u -d @$expires_seconds +%Y-%m-%dT%H:%M:%SZ)"
+            current_seconds=$(date +%s)
+            if [ $expires_seconds -lt $current_seconds ]; then
+              echo "❌ Token is EXPIRED!"
+              echo "   Expired $(( (current_seconds - expires_seconds) / 60 )) minutes ago"
+            elif [ $expires_seconds -lt $((current_seconds + 300)) ]; then
+              echo "⚠️  Token will expire SOON (within 5 minutes)"
+              echo "   Expires in $(( (expires_seconds - current_seconds) / 60 )) minutes"
+            else
+              echo "✅ Token appears valid"
+              echo "   Expires in $(( (expires_seconds - current_seconds) / 60 )) minutes"
+            fi
+          else
+            echo "❌ CLAUDE_EXPIRES_AT not set"
+          fi
+          echo ""
+        env:
+          CLAUDE_ACCESS_TOKEN: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          CLAUDE_REFRESH_TOKEN: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+          CLAUDE_EXPIRES_AT: ${{ secrets.CLAUDE_EXPIRES_AT }}
+
+      - name: Test Token with Curl
+        run: |
+          echo "🧪 Testing Token with Direct API Call"
+          echo "====================================="
+          
+          if [ -n "$CLAUDE_ACCESS_TOKEN" ]; then
+            echo "Making test API call..."
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $CLAUDE_ACCESS_TOKEN" \
+              -d '{"model":"claude-3-sonnet-20240229","max_tokens":10,"messages":[{"role":"user","content":"Say OK"}]}' \
+              https://api.anthropic.com/v1/messages)
+            
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            RESPONSE_BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS/d')
+            
+            echo "HTTP Status: $HTTP_STATUS"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Direct API call SUCCESS!"
+              echo "Token is working correctly"
+            elif [ "$HTTP_STATUS" = "401" ]; then
+              echo "❌ Direct API call FAILED - 401 Unauthorized"
+              echo "This confirms the token is expired/invalid"
+              echo "Response: $RESPONSE_BODY"
+            else
+              echo "❓ Unexpected response: $HTTP_STATUS"
+              echo "Response: $RESPONSE_BODY"
+            fi
+          else
+            echo "❌ No access token available for testing"
+          fi
+          echo ""
+        env:
+          CLAUDE_ACCESS_TOKEN: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+
+      - name: Install Bun and Dependencies
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.11
+
+      - name: Install Dependencies
+        run: |
+          bun install
+
+      - name: Test OAuth Refresh Logic
+        run: |
+          echo "🔄 Testing OAuth Refresh Logic"
+          echo "============================="
+          
+          # Create a test script
+          cat > test-oauth.js << 'EOF'
+          import { setupOAuthWithRefresh } from './src/oauth/token-refresh.js';
+          import * as core from '@actions/core';
+          
+          // Mock core.getInput to return our test values
+          const originalGetInput = core.getInput;
+          core.getInput = (name) => {
+            switch(name) {
+              case 'use_oauth': return 'true';
+              case 'claude_access_token': return process.env.CLAUDE_ACCESS_TOKEN;
+              case 'claude_refresh_token': return process.env.CLAUDE_REFRESH_TOKEN;
+              case 'claude_expires_at': return process.env.CLAUDE_EXPIRES_AT;
+              default: return originalGetInput(name);
+            }
+          };
+          
+          try {
+            console.log('🚀 Testing OAuth setup...');
+            const result = await setupOAuthWithRefresh();
+            
+            if (result) {
+              console.log('✅ OAuth setup successful');
+              console.log(`Access token: ${result.accessToken.substring(0, 20)}...`);
+              console.log(`Expires at: ${new Date(result.expiresAt).toISOString()}`);
+            } else {
+              console.log('❌ OAuth setup returned null');
+            }
+          } catch (error) {
+            console.error('❌ OAuth setup failed:', error.message);
+            process.exit(1);
+          }
+          EOF
+          
+          # Run the test
+          bun run test-oauth.js
+        env:
+          CLAUDE_ACCESS_TOKEN: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          CLAUDE_REFRESH_TOKEN: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+          CLAUDE_EXPIRES_AT: ${{ secrets.CLAUDE_EXPIRES_AT }}
+
+      - name: Run Full Action (if tokens valid)
+        if: success()
+        uses: ./
+        with:
+          use_oauth: "true"
+          claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+          claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+          direct_prompt: "Say 'OAuth is working!' if you can see this message."
+          timeout_minutes: "5" 

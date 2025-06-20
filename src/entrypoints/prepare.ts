@@ -30,6 +30,14 @@ async function run() {
       core.exportVariable("CLAUDE_ACCESS_TOKEN", oauthTokens.accessToken);
       core.exportVariable("CLAUDE_REFRESH_TOKEN", oauthTokens.refreshToken);
       core.exportVariable("CLAUDE_EXPIRES_AT", oauthTokens.expiresAt.toString());
+
+      // Also set outputs to ensure they are passed to subsequent steps
+      core.setOutput("CLAUDE_ACCESS_TOKEN", oauthTokens.accessToken);
+      core.setOutput("CLAUDE_REFRESH_TOKEN", oauthTokens.refreshToken);
+      core.setOutput("CLAUDE_EXPIRES_AT", oauthTokens.expiresAt.toString());
+
+      console.log(`✅ Access token: ${oauthTokens.accessToken.substring(0, 10)}...`);
+      console.log(`✅ Token expires at: ${new Date(oauthTokens.expiresAt).toISOString()}`);
     }
 
     // Step 1: Setup GitHub token
