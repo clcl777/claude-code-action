@@ -6,21 +6,32 @@
  */
 
 import * as core from "@actions/core";
-import { setupGitHubToken } from "../github/token";
-import { checkTriggerAction } from "../github/validation/trigger";
-import { checkHumanActor } from "../github/validation/actor";
-import { checkWritePermissions } from "../github/validation/permissions";
-import { createInitialComment } from "../github/operations/comments/create-initial";
-import { setupBranch } from "../github/operations/branch";
-import { updateTrackingComment } from "../github/operations/comments/update-with-branch";
-import { prepareMcpConfig } from "../mcp/install-mcp-server";
 import { createPrompt } from "../create-prompt";
 import { createOctokit } from "../github/api/client";
-import { fetchGitHubData } from "../github/data/fetcher";
 import { parseGitHubContext } from "../github/context";
+import { fetchGitHubData } from "../github/data/fetcher";
+import { setupBranch } from "../github/operations/branch";
+import { createInitialComment } from "../github/operations/comments/create-initial";
+import { updateTrackingComment } from "../github/operations/comments/update-with-branch";
+import { setupGitHubToken } from "../github/token";
+import { checkHumanActor } from "../github/validation/actor";
+import { checkWritePermissions } from "../github/validation/permissions";
+import { checkTriggerAction } from "../github/validation/trigger";
+import { prepareMcpConfig } from "../mcp/install-mcp-server";
+import { setupOAuthWithRefresh } from "../oauth/token-refresh";
 
 async function run() {
   try {
+    // Step 0: Setup OAuth authentication with automatic refresh (if applicable)
+    const oauthTokens = await setupOAuthWithRefresh();
+    if (oauthTokens) {
+      console.log("✅ OAuth authentication setup completed");
+      // Update core inputs with refreshed tokens if they were refreshed
+      core.exportVariable("CLAUDE_ACCESS_TOKEN", oauthTokens.accessToken);
+      core.exportVariable("CLAUDE_REFRESH_TOKEN", oauthTokens.refreshToken);
+      core.exportVariable("CLAUDE_EXPIRES_AT", oauthTokens.expiresAt.toString());
+    }
+
     // Step 1: Setup GitHub token
     const githubToken = await setupGitHubToken();
     const octokit = createOctokit(githubToken);
@@ -66,7 +77,7 @@ async function run() {
 
     // Step 9: Determine the correct comment ID to use
     let finalCommentId = commentId;
-    
+
     // If we created a new branch for an issue and there's a PR, create a new comment on the PR
     if (branchInfo.claudeBranch && !context.isPR) {
       // Check if a PR exists for this branch
@@ -77,22 +88,22 @@ async function run() {
           head: `${context.repository.owner}:${branchInfo.claudeBranch}`,
           state: 'open'
         });
-        
-                 if (prs.length > 0 && prs[0]) {
-           // PR exists, create a new comment on the PR
-           const prNumber = prs[0].number;
+
+        if (prs.length > 0 && prs[0]) {
+          // PR exists, create a new comment on the PR
+          const prNumber = prs[0].number;
           console.log(`Found PR #${prNumber} for branch ${branchInfo.claudeBranch}, creating new comment`);
-          
-                     const prCommentResponse = await octokit.rest.issues.createComment({
-             owner: context.repository.owner,
-             repo: context.repository.repo,
-             issue_number: prNumber,
-             body: "🤖 Claude is working on this...\n\n<img src=\"https://github.com/user-attachments/assets/5ac382c7-e004-429b-8e35-7feb3e8f9c6f\" width=\"14px\" height=\"14px\" style=\"vertical-align: middle; margin-left: 4px;\" />"
-           });
-          
+
+          const prCommentResponse = await octokit.rest.issues.createComment({
+            owner: context.repository.owner,
+            repo: context.repository.repo,
+            issue_number: prNumber,
+            body: "🤖 Claude is working on this...\n\n<img src=\"https://github.com/user-attachments/assets/5ac382c7-e004-429b-8e35-7feb3e8f9c6f\" width=\"14px\" height=\"14px\" style=\"vertical-align: middle; margin-left: 4px;\" />"
+          });
+
           finalCommentId = prCommentResponse.data.id;
           console.log(`✅ Created new PR comment with ID: ${finalCommentId}`);
-          
+
           // Update environment variable for downstream steps
           core.exportVariable("CLAUDE_COMMENT_ID", finalCommentId.toString());
         }
@@ -121,7 +132,7 @@ async function run() {
       context,
     );
 
-    // Step 11: Get MCP configuration
+    // Step 12: Get MCP configuration
     const mcpConfig = await prepareMcpConfig(
       githubToken,
       context.repository.owner,
@@ -135,6 +146,4 @@ async function run() {
   }
 }
 
-if (import.meta.main) {
-  run();
-}
+run();

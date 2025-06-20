@@ -1,0 +1,77 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Architecture and Design Patterns
+
+## High-Level Architecture
+This is a **GitHub Action** that acts as a bridge between GitHub repositories and Claude AI, with support for multiple AI providers.
+
+## Core Components
+
+### 1. Action Entry Points (`src/entrypoints/`)
+- **Prepare Phase**: [src/entrypoints/prepare.ts](mdc:src/entrypoints/prepare.ts) 
+  - Validates triggers and prepares context
+  - Sets up environment variables
+  - Determines if Claude should be activated
+- **Update Phase**: [src/entrypoints/update-comment-link.ts](mdc:src/entrypoints/update-comment-link.ts)  
+  - Updates GitHub comments with job status
+  - Provides links to action execution details
+
+### 2. GitHub Integration (`src/github/`)
+- GitHub API wrappers and utilities
+- Comment processing and response logic
+- Repository and PR data extraction
+- Webhook event handling
+
+### 3. Model Context Protocol (`src/mcp/`)
+- Integration with Model Context Protocol SDK
+- Tool definitions and execution
+- Context management for Claude interactions
+
+### 4. Prompt Generation (`src/create-prompt/`)
+- Dynamic prompt creation based on GitHub context
+- Context-aware prompt templates
+- User instruction processing
+
+## Design Patterns
+
+### Composite Action Pattern
+The project uses GitHub's composite action pattern ([action.yml](mdc:action.yml)):
+1. **Setup** - Install Bun and dependencies
+2. **Prepare** - Validate triggers and prepare context  
+3. **Execute** - Run Claude Code action
+4. **Update** - Update GitHub comments with results
+5. **Cleanup** - Revoke tokens and cleanup
+
+### Provider Abstraction
+Supports multiple AI providers through unified interface:
+- **Direct Anthropic API** (default)
+- **OAuth Authentication** (Claude Max subscribers) 
+- **Amazon Bedrock** (via OIDC)
+- **Google Vertex AI** (via OIDC)
+
+### Environment-based Configuration
+- Uses GitHub Action inputs and environment variables
+- Supports multiple authentication methods
+- Configurable tools and permissions
+
+## Key Dependencies
+- **Runtime**: Bun (package manager and runtime)
+- **GitHub**: Actions SDK, Octokit clients
+- **AI Integration**: Model Context Protocol SDK
+- **Validation**: Zod schemas
+- **HTTP**: node-fetch
+
+## Testing Strategy
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: End-to-end workflow testing  
+- **Mock Context**: [test/mockContext.ts](mdc:test/mockContext.ts) for GitHub API mocking
+- **Comprehensive Coverage**: Large test files indicate thorough testing
+
+## Security Considerations
+- Token management and cleanup
+- Permission validation
+- Secure environment variable handling
+- OIDC authentication for cloud providers

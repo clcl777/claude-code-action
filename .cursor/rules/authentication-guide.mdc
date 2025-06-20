@@ -1,0 +1,57 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Authentication Configuration Guide
+
+## OAuth Authentication (Claude Max Subscribers)
+**NEW FEATURE**: This fork adds OAuth support for Claude Max subscribers.
+
+### Required Secrets
+- `CLAUDE_ACCESS_TOKEN` - Your Claude OAuth access token
+- `CLAUDE_REFRESH_TOKEN` - Your Claude OAuth refresh token  
+- `CLAUDE_EXPIRES_AT` - Token expiration timestamp
+
+### Configuration
+Set `use_oauth: "true"` in your workflow and include the OAuth secrets.
+
+### Getting OAuth Credentials
+1. Ensure you're logged in with Claude Max using `/login`
+2. Find credentials in `~/.claude/.credentials.json`
+
+## Direct Anthropic API
+### Required Secrets
+- `ANTHROPIC_API_KEY` - Your Anthropic API key
+
+### Configuration
+This is the default authentication method when no other providers are specified.
+
+## Amazon Bedrock
+### Required Configuration
+- Set `use_bedrock: "true"` in workflow
+- Configure OIDC authentication
+- Set environment variables:
+  - `AWS_REGION`
+  - `AWS_ACCESS_KEY_ID` 
+  - `AWS_SECRET_ACCESS_KEY`
+  - `AWS_SESSION_TOKEN`
+  - `ANTHROPIC_BEDROCK_BASE_URL`
+
+## Google Vertex AI
+### Required Configuration
+- Set `use_vertex: "true"` in workflow
+- Configure OIDC authentication
+- Set environment variables:
+  - `ANTHROPIC_VERTEX_PROJECT_ID`
+  - `CLOUD_ML_REGION`
+  - `GOOGLE_APPLICATION_CREDENTIALS`
+  - `ANTHROPIC_VERTEX_BASE_URL`
+  - Region-specific variables for different Claude models
+
+## GitHub Token
+- Uses GitHub App authentication by default
+- Optional: `GITHUB_TOKEN` secret for custom GitHub app integration
+
+## Action Configuration
+See [action.yml](mdc:action.yml) for all available authentication inputs and their descriptions.

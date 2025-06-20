@@ -1,0 +1,60 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Workflow Guide
+
+## Getting Started
+1. **Install Dependencies**: `bun install` 
+2. **Run Tests**: `bun test`
+3. **Type Check**: `bun run typecheck`
+4. **Format Code**: `bun run format`
+5. **Check Formatting**: `bun run format:check`
+
+## Package Manager
+This project uses **Bun** as the package manager and runtime. See [bun.lock](mdc:bun.lock) for locked dependencies.
+
+## Key Scripts (from [package.json](mdc:package.json))
+- `format` - Auto-format code with Prettier
+- `format:check` - Check if code is properly formatted
+- `install-hooks` - Install Git hooks for development
+- `test` - Run the test suite
+- `typecheck` - Run TypeScript type checking
+
+## Code Style
+- Uses **Prettier** for code formatting ([.prettierrc](mdc:.prettierrc))
+- TypeScript configuration in [tsconfig.json](mdc:tsconfig.json)
+- Git hooks for consistency
+
+## Project Dependencies
+### Runtime Dependencies
+- `@actions/core` & `@actions/github` - GitHub Actions SDK
+- `@modelcontextprotocol/sdk` - Model Context Protocol integration
+- `@octokit/*` - GitHub API clients
+- `node-fetch` - HTTP requests
+- `zod` - Schema validation
+
+### Development Dependencies  
+- `@types/*` - TypeScript type definitions
+- `prettier` - Code formatting
+- `typescript` - TypeScript compiler
+
+## GitHub Action Development
+- Main action definition: [action.yml](mdc:action.yml)
+- Entry points in `src/entrypoints/`
+- Uses composite action pattern with multiple steps
+
+## File Organization
+- `src/entrypoints/` - GitHub Action entry points
+- `src/github/` - GitHub API integration code
+- `src/mcp/` - Model Context Protocol implementations  
+- `src/create-prompt/` - Prompt generation logic
+- `test/` - Comprehensive test coverage
+- `examples/` - Workflow examples for users
+
+## Workflow Examples
+Reference implementations in `examples/` directory:
+- [examples/claude.yml](mdc:examples/claude.yml) - Basic setup
+- [examples/claude-auto-review.yml](mdc:examples/claude-auto-review.yml) - Automated reviews
+- [examples/claude-pr-path-specific.yml](mdc:examples/claude-pr-path-specific.yml) - Path-specific triggers

@@ -1,0 +1,46 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Testing Guide
+
+## Test Framework
+This project uses **Bun Test** as the testing framework. Run tests with:
+```bash
+bun test
+```
+
+## Test Structure
+All test files are located in the `test/` directory with `.test.ts` extension.
+
+## Test Files Overview
+
+### Core Functionality Tests
+- [test/create-prompt.test.ts](mdc:test/create-prompt.test.ts) - Tests prompt generation logic (24KB, 770 lines)
+- [test/prepare-context.test.ts](mdc:test/prepare-context.test.ts) - Tests context preparation (8.6KB, 265 lines)
+- [test/data-formatter.test.ts](mdc:test/data-formatter.test.ts) - Tests data formatting utilities (21KB, 729 lines)
+
+### Comment and Trigger Logic
+- [test/comment-logic.test.ts](mdc:test/comment-logic.test.ts) - Tests comment processing logic (14KB, 403 lines)
+- [test/trigger-validation.test.ts](mdc:test/trigger-validation.test.ts) - Tests trigger phrase detection (13KB, 432 lines)
+
+### Integration Tests
+- [test/image-downloader.test.ts](mdc:test/image-downloader.test.ts) - Tests image processing functionality (18KB, 666 lines)
+- [test/permissions.test.ts](mdc:test/permissions.test.ts) - Tests permission validation (4.5KB, 163 lines)
+
+### Utility Tests
+- [test/url-encoding.test.ts](mdc:test/url-encoding.test.ts) - Tests URL encoding utilities (3.4KB, 77 lines)
+- [test/branch-cleanup.test.ts](mdc:test/branch-cleanup.test.ts) - Tests branch cleanup logic (4.3KB, 150 lines)
+
+## Test Utilities
+- [test/mockContext.ts](mdc:test/mockContext.ts) - Mock context utilities for testing (9.7KB, 346 lines)
+
+## Running Tests
+- `bun test` - Run all tests
+- Use TypeScript configuration from [tsconfig.json](mdc:tsconfig.json) for type checking
+
+## Test Patterns
+- Tests use mock contexts for GitHub API interactions
+- Large test files indicate comprehensive coverage of complex functionality
+- Tests cover both unit and integration scenarios

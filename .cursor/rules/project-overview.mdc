@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Claude Code Action - Project Overview
+
+## Project Purpose
+This is a **GitHub Action that integrates Claude AI with GitHub repositories**. It's a fork of the official Claude Code Action that adds OAuth authentication support for Claude Max subscribers.
+
+## Key Features
+- 🤖 Interactive code assistant that responds to comments
+- 🔍 Code review and analysis capabilities  
+- ✨ Code implementation and fixes
+- 💬 PR/Issue integration via comments
+- 🛠️ Flexible tool access and GitHub API integration
+- 📋 Progress tracking with dynamic checkboxes
+- 🔐 Multiple authentication methods (OAuth, Anthropic API, Bedrock, Vertex AI)
+
+## Main Entry Points
+- [action.yml](mdc:action.yml) - GitHub Action configuration and workflow definition
+- [src/entrypoints/prepare.ts](mdc:src/entrypoints/prepare.ts) - Action preparation and context setup
+- [src/entrypoints/update-comment-link.ts](mdc:src/entrypoints/update-comment-link.ts) - Comment updating logic
+
+## Project Structure
+- `src/` - Main source code directory
+  - `entrypoints/` - GitHub Action entry points
+  - `github/` - GitHub API integrations
+  - `mcp/` - Model Context Protocol implementations
+  - `create-prompt/` - Prompt generation logic
+- `test/` - Test files using Bun test framework
+- `examples/` - GitHub workflow examples for different use cases
+- `scripts/` - Build and development scripts
+
+## Configuration Files
+- [package.json](mdc:package.json) - Dependencies and scripts
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+- [bun.lock](mdc:bun.lock) - Bun package manager lock file

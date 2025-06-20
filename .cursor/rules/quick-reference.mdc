@@ -1,0 +1,77 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Quick Reference Guide
+
+## Common Commands
+```bash
+# Development Setup
+bun install                    # Install dependencies
+bun run install-hooks         # Install Git hooks
+
+# Development Tasks
+bun test                      # Run all tests
+bun run typecheck            # Type checking
+bun run format               # Format code
+bun run format:check         # Check formatting
+
+# Specific Test Files
+bun test trigger-validation   # Test trigger logic
+bun test create-prompt       # Test prompt generation
+bun test image-downloader    # Test image processing
+```
+
+## Key File Locations
+
+### Configuration
+- [action.yml](mdc:action.yml) - Main GitHub Action configuration
+- [package.json](mdc:package.json) - Dependencies and scripts
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration  
+- [.prettierrc](mdc:.prettierrc) - Code formatting rules
+
+### Entry Points
+- [src/entrypoints/prepare.ts](mdc:src/entrypoints/prepare.ts) - Context preparation
+- [src/entrypoints/update-comment-link.ts](mdc:src/entrypoints/update-comment-link.ts) - Comment updates
+
+### Examples
+- [examples/claude.yml](mdc:examples/claude.yml) - Basic workflow
+- [examples/claude-auto-review.yml](mdc:examples/claude-auto-review.yml) - Auto reviews
+- [examples/claude-pr-path-specific.yml](mdc:examples/claude-pr-path-specific.yml) - Path-specific triggers
+
+## Troubleshooting
+
+### Authentication Issues
+1. **OAuth**: Check `~/.claude/.credentials.json` for valid tokens
+2. **API Key**: Verify `ANTHROPIC_API_KEY` secret is set correctly
+3. **GitHub Token**: Ensure repository permissions are configured
+
+### Testing Issues
+- Run `bun test --verbose` for detailed output
+- Check [test/mockContext.ts](mdc:test/mockContext.ts) for context setup
+- Large test files may take time to run
+
+### Action Deployment
+- Verify [action.yml](mdc:action.yml) inputs match workflow configuration
+- Check GitHub Action logs for detailed error messages
+- Ensure all required secrets are configured in repository settings
+
+## Documentation Files
+- [README.md](mdc:README.md) - Main project documentation (21KB, 499 lines)
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Version history
+- [CONTRIBUTING.md](mdc:CONTRIBUTING.md) - Contribution guidelines
+- [SECURITY.md](mdc:SECURITY.md) - Security policy
+- [CODE_OF_CONDUCT.md](mdc:CODE_OF_CONDUCT.md) - Community guidelines
+
+## Project Structure Quick Overview
+```
+├── src/
+│   ├── entrypoints/     # Action entry points
+│   ├── github/          # GitHub API integration  
+│   ├── mcp/             # Model Context Protocol
+│   └── create-prompt/   # Prompt generation
+├── test/                # Test files
+├── examples/            # Workflow examples
+└── scripts/             # Build/development scripts
+```

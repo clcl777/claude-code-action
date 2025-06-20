@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# GitHub Integration Guide
+
+## Supported GitHub Events
+This action responds to various GitHub webhook events:
+
+### Comment Events
+- `issue_comment` - Comments on issues or PRs
+- `pull_request_review_comment` - Comments on PR diffs  
+- `pull_request_review` - PR review submissions
+
+### Issue/PR Events  
+- `issues` - Issue creation, assignment
+- `pull_request` - PR creation, synchronization
+- `repository_dispatch` - Custom API-triggered events (coming soon)
+- `workflow_dispatch` - Manual workflow triggers (coming soon)
+
+## Trigger Mechanisms
+
+### Comment Triggers
+- Default trigger phrase: `@claude` (configurable via `trigger_phrase` input)
+- Responds to mentions in:
+  - Issue comments
+  - PR comments  
+  - PR review comments
+  - Issue/PR body text
+  - Issue titles
+
+### Assignment Triggers
+- Configurable via `assignee_trigger` input
+- Activates when specified user is assigned to an issue
+
+### Direct Prompts
+- `direct_prompt` input bypasses trigger detection
+- Useful for automated workflows without manual mentions
+
+## GitHub API Integration
+The action integrates with GitHub APIs through:
+- `@actions/github` - Official GitHub Actions toolkit
+- `@octokit/rest` - REST API client
+- `@octokit/graphql` - GraphQL API client  
+- `@octokit/webhooks-types` - Type definitions for webhook payloads
+
+## Authentication
+- **Default**: Uses GitHub App authentication (no secrets required)
+- **Custom**: Optional `github_token` input for custom GitHub app integration
+- **Permissions**: Requires repository and pull request access
+
+## Entry Points
+- [src/entrypoints/prepare.ts](mdc:src/entrypoints/prepare.ts) - Prepares GitHub context and validates triggers
+- [src/entrypoints/update-comment-link.ts](mdc:src/entrypoints/update-comment-link.ts) - Updates comments with job status and links
+
+## GitHub-specific Code
+- `src/github/` directory contains GitHub API integration code
+- Comment processing and response logic
+- PR and issue data extraction
+- Branch and repository management
+
+## Workflow Configuration
+See [action.yml](mdc:action.yml) for complete list of GitHub-related inputs and outputs.

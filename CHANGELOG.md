@@ -11,6 +11,7 @@ This is a fork of the official Claude Code Action that adds OAuth authentication
   - New input: `claude_access_token` - OAuth access token from Claude Max subscription
   - New input: `claude_refresh_token` - OAuth refresh token from Claude Max subscription
   - New input: `claude_expires_at` - Token expiration timestamp
+- **Automatic OAuth Token Refresh**: The action now automatically checks token expiration and refreshes OAuth tokens if they are expired or will expire within 5 minutes
 - **Updated Base Action**: Uses `Akira-Papa/claude-code-base-action@beta` which includes OAuth credential handling
 
 ### Changed
