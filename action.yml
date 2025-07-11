@@ -121,21 +121,25 @@ runs:
       shell: bash
       run: |
         if [ -n "$UPDATED_CLAUDE_ACCESS_TOKEN" ]; then
-          gh secret set CLAUDE_ACCESS_TOKEN --repo "clcl777/fake_roulette"
+          echo "Updating CLAUDE_ACCESS_TOKEN secret..."
+          echo "$UPDATED_CLAUDE_ACCESS_TOKEN" | gh secret set CLAUDE_ACCESS_TOKEN --repo "$GITHUB_REPOSITORY" || echo "Failed to update CLAUDE_ACCESS_TOKEN"
         fi
 
         if [ -n "$UPDATED_CLAUDE_REFRESH_TOKEN" ]; then
-          gh secret set CLAUDE_REFRESH_TOKEN --repo "clcl777/fake_roulette"
+          echo "Updating CLAUDE_REFRESH_TOKEN secret..."
+          echo "$UPDATED_CLAUDE_REFRESH_TOKEN" | gh secret set CLAUDE_REFRESH_TOKEN --repo "$GITHUB_REPOSITORY" || echo "Failed to update CLAUDE_REFRESH_TOKEN"
         fi
 
         if [ -n "$UPDATED_CLAUDE_EXPIRES_AT" ]; then
-          gh secret set CLAUDE_EXPIRES_AT --repo "clcl777/fake_roulette"
+          echo "Updating CLAUDE_EXPIRES_AT secret..."
+          echo "$UPDATED_CLAUDE_EXPIRES_AT" | gh secret set CLAUDE_EXPIRES_AT --repo "$GITHUB_REPOSITORY" || echo "Failed to update CLAUDE_EXPIRES_AT"
         fi
       env:
         GITHUB_TOKEN: ${{ steps.prepare.outputs.GITHUB_TOKEN }}
         UPDATED_CLAUDE_ACCESS_TOKEN: ${{ env.UPDATED_CLAUDE_ACCESS_TOKEN }}
         UPDATED_CLAUDE_REFRESH_TOKEN: ${{ env.UPDATED_CLAUDE_REFRESH_TOKEN }}
         UPDATED_CLAUDE_EXPIRES_AT: ${{ env.UPDATED_CLAUDE_EXPIRES_AT }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
 
     - name: Run Claude Code
       id: claude-code
